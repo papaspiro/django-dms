@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import pre_save
 from django.utils.encoding import force_unicode, smart_unicode
 
-from documents.utils import ChoicesBank, UUIDField, HashField, get_hash
+from django_dms.utils import ChoicesBank, UUIDField, HashField, get_hash
 
 class DocumentBase(models.Model):
     """ Minimum fields for a document entry.

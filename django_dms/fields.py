@@ -14,8 +14,8 @@ from django.db import models
 from django.utils.text import capfirst
 from django.core.files.uploadedfile import UploadedFile
 
-from documents.utils import ChoicesBank
-from documents.widgets import DocumentWidget, ManyDocumentsWidget
+from django_dms.utils import ChoicesBank
+from django_dms.widgets import DocumentWidget, ManyDocumentsWidget
 
 class DocumentField(models.ForeignKey, models.FileField):
     """ Links to a document, with all the features of a FileField().

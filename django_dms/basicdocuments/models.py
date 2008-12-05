@@ -10,7 +10,7 @@
 
 """
 
-from documents.models import BasicDocumentBase
+from django_dms.models import BasicDocumentBase
 
 class BasicDocument(BasicDocumentBase):
     class Meta:
