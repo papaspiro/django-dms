@@ -9,7 +9,7 @@
 """
 
 from django.contrib import admin
-from documents.basicdocuments.models import BasicDocument, TestDocumentModel
+from django_dms.basicdocuments.models import BasicDocument, TestDocumentModel
 
 class BasicDocumentAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'title', 'author', 'mimetype', 'uploaded_by', 'date_added', 'date_created')
