@@ -15,6 +15,7 @@ class Report(DocumentBase):
 `BasicDocumentBase` already defines a few useful fields, such as `title`, `summary`, `author` and `date_created`. This can automatically be populated from the document's metadata, if the metadata system is connected (see below).
 
 == Automatically populating from a document's metadata ==
+Metadata contained within a file can be used to automatically populate attributes in your model. This makes use of the [http://www.gnu.org/software/libextractor/ libextractor] library, which needs to be installed with python bindings.
 
 If you connect the `extract_metadata` function, data can be automatically
 extracted from the uploaded file on save. 
