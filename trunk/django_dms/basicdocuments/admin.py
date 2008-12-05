@@ -9,13 +9,9 @@
 """
 
 from django.contrib import admin
-from django_dms.basicdocuments.models import BasicDocument, TestDocumentModel
+from django_dms.basicdocuments.models import BasicDocument
 
 class BasicDocumentAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'title', 'author', 'mimetype', 'uploaded_by', 'date_added', 'date_created')
 
-class TestDocumentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'document', 'uuid',)
-
 admin.site.register(BasicDocument, BasicDocumentAdmin)
-admin.site.register(TestDocumentModel, TestDocumentAdmin)
