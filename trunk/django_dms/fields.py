@@ -13,6 +13,7 @@ from django import forms
 from django.db import models
 from django.utils.text import capfirst
 from django.core.files.uploadedfile import UploadedFile
+from django.conf import settings
 
 from django_dms.utils import ChoicesBank
 from django_dms.widgets import DocumentWidget, ManyDocumentsWidget
@@ -69,7 +70,8 @@ class ManyDocumentsField(models.ManyToManyField):
         # No call to super(), we are taking complete control of this method
         return _FlexibleTypedChoiceField(**kwargs)
 
-# Form Fields
+#
+# FORM FIELDS
 #
 
 class _FlexibleTypedChoiceField(forms.MultipleChoiceField):
