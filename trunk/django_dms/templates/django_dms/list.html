@@ -1,0 +1,50 @@
+{% extends "base-site.html" %}
+{% load thumbnail %}
+{% load already %}
+
+{% block extra_javascript %}
+<script type="text/javascript" src="/media/js/jquery.js"></script>
+<script type="text/javascript" src="/media/js/jquery.lightbox-0.5.js"></script>
+<script type="text/javascript" src="/media/js/jquery.form.js"></script>
+{% endblock %}
+
+{% block extra_stylesheets %}
+<link rel="stylesheet" type="text/css" href="/media/css/jquery.lightbox-0.5.css" media="screen" />
+{% endblock %}
+
+{% block final_javascript %}
+<script type="text/javascript">
+$(function() {
+    $('a.preview').lightBox();
+    $(".send").attr('href', '#');
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="message"></div>
+{% for item in object_list %}{% with item.document as document %}
+<h2><a href="{% url dms_site:document_detail document.slug %}">{{ document.title|default:"Untitled" }}</a></h2>
+<p>{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{% thumbnail document.file 600x600 %}">Preview</a>, {% endif %}
+   {% if list_links.view %}<a href="{% url dms_site:document_view document.slug %}">View</a>, {% endif %}
+   {% if list_links.download %}<a href="{% url dms_site:document_download document.slug %}">Download</a>, {% endif %}
+   {% if list_links.email %}{% if document|already_sent:request %}<span class="subtle">Email sent{% else %}<span id="send_{{ forloop.counter }}"><a class="send" href="{% url dms_site:document_send document.slug %}">Email it to me</a>{% endif %}</span>{% endif %}</p>
+{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{% thumbnail document.file 600x600 %}">{% endif %}{% if list_thumbnail %}<img src="{% thumbnail document.file 200x200 %}" alt="Thumbnail of {{ document.title }}" />{% endif %}{% if list_links.preview %}</a>
+<script type="text/javascript">
+    $("#send_{{ forloop.counter }} a").click(function(){
+        $('#send_{{ forloop.counter }}').load('{% url dms_site:document_send_ajax document.slug %}').addClass('subtle');
+        return false
+        });
+</script>{% endif %}
+{% for name,field in item.display_fields %}{% if field %}
+<h3>{{ name|title }}</h3>
+<p>{{ field }}</p>{% endif %}
+{% endfor %}
+{# {% if list_display.summary %}{% if document.summary %}<p>{{ document.summary }}</p>{% endif %}{% endif %} #}
+<div class="clearing"></div>
+{% endwith %}
+{% endfor %}
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">previous</a>{% endif %}
+    {% ifnotequal page.paginator.num_pages 1 %}<span class="current">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% endifnotequal %}
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">next</a>{% endif %}
+{% endblock %}
