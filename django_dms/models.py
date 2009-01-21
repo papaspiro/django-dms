@@ -11,18 +11,21 @@
 import os
 import uuid
 from datetime import datetime
+
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import pre_save
 from django.utils.encoding import force_unicode, smart_unicode
+from sorl.thumbnail.main import DjangoThumbnail
 
 from django_dms.utils import ChoicesBank, Choices, UUIDField, HashField, get_hash
 from mimetypes import guess_type
 
-def get_filename_from_uuid(instance, filename):
+def get_filename_from_uuid(instance, filename, directory='documents'):
     populate_file_extension_and_mimetype(instance, filename)
     stem, extension = os.path.splitext(filename)
-    return 'documents/%s%s' % (instance.uuid, extension)
+    return '%s/%s%s' % (directory, instance.uuid, extension)
 
 def populate_file_extension_and_mimetype(instance, filename):
     # First populate the file extension and mimetype
@@ -41,8 +44,8 @@ class DocumentBase(models.Model):
     file_mimetype  = models.CharField(max_length=50, default="", editable=False)
     file_extension = models.CharField(max_length=10, default="", editable=False)
 
-    date_added   = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    date_added   = models.DateTimeField("added", auto_now_add=True)
+    date_updated = models.DateTimeField("updated", auto_now=True)
 
     class Meta:
         abstract = True
@@ -80,6 +83,16 @@ class DocumentBase(models.Model):
         else:
             return bool(self.interactions.filter(mode=mode, user=request.user))
 
+    @property               
+    def file_thumbnail_small(self):
+        # TODO: subclass DjangoThumbnail to remove UUID from URL
+        return DjangoThumbnail(self.file.name, (200,200))
+
+    @property               
+    def file_thumbnail_medium(self):
+        # TODO: subclass DjangoThumbnail to remove UUID from URL
+        return DjangoThumbnail(self.file.name, (600,600))
+
 
 class BasicDocumentBase(DocumentBase):
     """ Basic document entry, with a selected metadata.
@@ -88,7 +101,7 @@ class BasicDocumentBase(DocumentBase):
     slug         = models.SlugField() # Make this unique for smaller databases
     summary      = models.TextField(default="", blank=True)
     author       = models.CharField(max_length=150, default="", blank=True)
-    date_created = models.DateTimeField(null=True, blank=True)
+    date_created = models.DateTimeField("created", null=True, blank=True)
 
     # NB: Automate this in the form
     uploaded_by  = models.ForeignKey(User, null=True, blank=True, editable=False)
@@ -126,6 +139,16 @@ class BasicDocumentBase(DocumentBase):
         return value
 
 
+class InteractionManager(models.Manager):
+    use_for_related_fields = True
+    def register(self, document, mode, request):
+        attributes = { 'document': document, 'mode': getattr(self.model.MODES, mode.upper()) }
+        if request.user.is_anonymous():
+            attributes['session_key'] = request.session.session_key
+        else:
+            attributes['user'] = request.user
+        return self.create(**attributes)
+
 class DocumentInteractionBase(models.Model):
     MODES = Choices('Viewed', 'Downloaded', 'Sent')
 
@@ -134,6 +157,7 @@ class DocumentInteractionBase(models.Model):
     session_key = models.CharField(max_length=40, null=True, blank=True)
     user        = models.ForeignKey(User, null=True, blank=True)
     timestamp   = models.DateTimeField(default=datetime.now)
+    objects     = InteractionManager()
 
     def __unicode__(self):
         return u'%s %s by %s on %s' % (self.document, self.get_mode_display().lower(), 
@@ -150,6 +174,7 @@ class DocumentInteractionBase(models.Model):
             pass
         super(DocumentInteractionBase, self).save(*args, **kwargs)
 
+
 #def interaction_model_factory(document_model):
     #""" Create a class that will correctly implement document interactions. """
     ## TODO: This is not the best approach, because the class name is not explicitly determined by the user.
@@ -158,3 +183,35 @@ class DocumentInteractionBase(models.Model):
     #class DocumentInteraction(DocumentInteractionBase):
         #document    = models.ForeignKey(document_model, related_name="interactions")
     #return DocumentInteraction
+
+from django.core.files.base import ContentFile, File
+
+class StagingManager(models.Manager):
+    def add_staging_document(self, content, filename, content_type, email_subject, email_content):
+        attributes = { 'original_filename': filename, 
+                       'file_mimetype': content_type, 'email_subject': email_subject, 
+                       'email_content': email_content }
+        instance = self.model(**attributes)
+        instance.file.save(filename, ContentFile(content), save=True)
+        return instance
+
+# Set DJANGO_DMS_STAGING to False to prevent table from being created
+if getattr(settings, 'DJANGO_DMS_STAGING', True):
+
+    staging_filename = lambda i,f: get_filename_from_uuid(i, f, directory='staging')
+    class DocumentStaging(models.Model):
+        """ Storage for documents between uploading and adding to the database proper.
+        """
+
+        uuid              = models.CharField(max_length=36, default=lambda:unicode(uuid.uuid4()), blank=True)
+        file              = models.FileField(upload_to=staging_filename)
+        original_filename = models.CharField(max_length=255, default="", blank=True)
+        file_mimetype     = models.CharField(max_length=50, default="", blank=True)
+        email_subject     = models.TextField(default="", blank=True)
+        email_content     = models.TextField(default="", blank=True)
+        date_added        = models.DateTimeField("added", auto_now_add=True)
+        objects           = StagingManager()
+
+        def __unicode__(self):
+            return self.uuid
+
