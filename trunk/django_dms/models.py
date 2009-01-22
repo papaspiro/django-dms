@@ -187,10 +187,11 @@ class DocumentInteractionBase(models.Model):
 from django.core.files.base import ContentFile, File
 
 class StagingManager(models.Manager):
-    def add_staging_document(self, content, filename, content_type, email_subject, email_content):
-        attributes = { 'original_filename': filename, 
-                       'file_mimetype': content_type, 'email_subject': email_subject, 
-                       'email_content': email_content }
+    def add_staging_document(self, content, filename, content_type, email_data, dms_site):
+        attributes = { 'file_original_name': filename, 
+                       'file_mimetype': content_type, 'email_subject': email_data.subject, 
+                       'email_content': email_data.content, 'email_sender': email_data.sender, 
+                       'email_date': email_data.date, 'dms_site': dms_site.name }
         instance = self.model(**attributes)
         instance.file.save(filename, ContentFile(content), save=True)
         return instance
@@ -201,16 +202,23 @@ if getattr(settings, 'DJANGO_DMS_STAGING', True):
     staging_filename = lambda i,f: get_filename_from_uuid(i, f, directory='staging')
     class DocumentStaging(models.Model):
         """ Storage for documents between uploading and adding to the database proper.
+            TODO: Another, more flexible approach would be to simply store the email headers
+            and parse it when populating the instance. This means that custom population fields
+            can references headers that we haven't stored here. This could be rewritten at a future date, 
+            if it really is necessary.
         """
 
-        uuid              = models.CharField(max_length=36, default=lambda:unicode(uuid.uuid4()), blank=True)
-        file              = models.FileField(upload_to=staging_filename)
-        original_filename = models.CharField(max_length=255, default="", blank=True)
-        file_mimetype     = models.CharField(max_length=50, default="", blank=True)
-        email_subject     = models.TextField(default="", blank=True)
-        email_content     = models.TextField(default="", blank=True)
-        date_added        = models.DateTimeField("added", auto_now_add=True)
-        objects           = StagingManager()
+        uuid                = models.CharField(max_length=36, default=lambda:unicode(uuid.uuid4()), blank=True)
+        file                = models.FileField(upload_to=staging_filename)
+        file_mimetype       = models.CharField(max_length=50, default="", blank=True)
+        file_original_name  = models.CharField(max_length=255, default="", blank=True)
+        email_subject       = models.TextField(default="", blank=True)
+        email_content       = models.TextField(default="", blank=True)
+        email_sender        = models.CharField(max_length=255, default="", blank=True)
+        email_date          = models.DateTimeField(default=datetime.now, null=True, blank=True)
+        email_received_date = models.DateTimeField(auto_now_add=True)
+        dms_site            = models.CharField(max_length=255, default="", blank=True)
+        objects             = StagingManager()
 
         def __unicode__(self):
             return self.uuid
