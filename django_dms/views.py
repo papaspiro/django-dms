@@ -80,6 +80,7 @@ class EmailForm(forms.Form):
 
 class DocumentView(object):
     queryset = None
+    url_identifier_field = 'uuid' # Please use something sane like slug or friendly_id, not uuid!
 
     # List view customisation
     list_template = 'django_dms/list.html'
@@ -87,14 +88,14 @@ class DocumentView(object):
     list_display = ['summary']
     list_links = ['preview', 'view', 'download', 'email']
     list_per_page = 10
-    ordering = None # TODO
+    ordering = None
     search_fields = None # TODO
 
     # Detail view customisation
     template = 'django_dms/detail.html'
     fields = None # [] is no fields, None is all fields
     exclude = []  # [] is no fields
-    field_class_filters = {models.DateTimeField: lambda v: naturalday(v, 'd F Y').title()}
+    field_class_filters = { models.DateTimeField: lambda v: naturalday(v, 'd F Y').title() }
     field_filters = {}
     thumbnail = True
     links = ['preview', 'view', 'download', 'email']
@@ -106,11 +107,11 @@ class DocumentView(object):
         """ Get the list of url patterns for this view. """
         return patterns('',
             url(r'^$',                      self.list, name="%s_document_list" % self.name),
-            url(r'^([\w\d-]+)/download/$',  self.download, name="%s_document_download" % self.name),
-            url(r'^([\w\d-]+)/send/$',      self.send, name="%s_document_send" % self.name),
-            url(r'^([\w\d-]+)/send/ajax/$', self.send_ajax, name="%s_document_send_ajax" % self.name),
-            url(r'^([\w\d-]+)/detail/$',    self.detail, name="%s_document_detail" % self.name),
-            url(r'^([\w\d-]+)/view/$',      self.view, name="%s_document_view" % self.name),
+            url(r'^([^\/]+)/download/$',  self.download, name="%s_document_download" % self.name),
+            url(r'^([^\/]+)/send/$',      self.send, name="%s_document_send" % self.name),
+            url(r'^([^\/]+)/send/ajax/$', self.send_ajax, name="%s_document_send_ajax" % self.name),
+            url(r'^([^\/]+)/detail/$',    self.detail, name="%s_document_detail" % self.name),
+            url(r'^([^\/]+)/view/$',      self.view, name="%s_document_view" % self.name),
             )
     urls = property(get_urls)
 
@@ -121,7 +122,7 @@ class DocumentView(object):
     def list(self, request):
         page_number = request.GET.get('page', 1)
 
-        queryset = self.queryset._clone()
+        queryset = self._get_prepared_queryset()
 
         pages = Paginator(queryset, self.list_per_page)
         page = pages.page(page_number)
@@ -131,17 +132,21 @@ class DocumentView(object):
                     'list_thumbnail': self.list_thumbnail,
                     'list_links': dict([(a, True) for a in self.list_links]),
                     'page': page,
-                    'dms_site': self.name,
+                    'dms_site': self,
                     }
 
         return render_to_response(self.list_template, context)
 
-    def send(self, request, slug):
+    def get_document(self, id):
+        queryset = self._get_prepared_queryset()
+        kwargs = {self.url_identifier_field: id}
+        print kwargs
+        return get_object_or_404(queryset, **kwargs)
+
+    def send(self, request, id):
         """ Send the specified document to the user's email address (HTML version). """
+        document = self.get_document(id)
 
-        queryset = self.queryset._clone()
-
-        document = get_object_or_404(queryset, slug=slug)
         form     = self._set_user_email_address(request)
         email    = self._get_user_email_address(request)
         if form or not email:
@@ -156,19 +161,18 @@ class DocumentView(object):
     
         return HttpResponseRedirect(reverse('%s_document_list' % self.name))
     
-    def send_ajax(self, request, slug):
+    def send_ajax(self, request, id):
         """ Send the specified document to the user's email address (AJAX version). """
 
-        queryset = self.queryset._clone()
+        document = self.get_document(id)
 
-        document = get_object_or_404(queryset, slug=slug)
         form     = self._set_user_email_address(request)
         email    = self._get_user_email_address(request)
         if not email and not form:
             form = EmailForm()
     
         if form:
-            content = '<form class="ajax_update_email" action="%s" method="post">' % reverse('%s_document_send' % self.name, args=[document.slug])
+            content = '<form class="ajax_update_email" action="%s" method="post">' % reverse('%s_document_send' % self.name, args=[getattr(document, self.url_identifier_field)])
             content += '%s<input type="submit" value="Send"/></form>' % form['email']
             return HttpResponse(content)
     
@@ -180,21 +184,20 @@ class DocumentView(object):
     
         return HttpResponse('Email sent to %s' % email)
     
-    def download(self, request, slug):
+    def download(self, request, id):
 
-        queryset = self.queryset._clone()
-        document = get_object_or_404(queryset, slug=slug)
+        document = self.get_document(id)
 
         # Send a signal to let everyone know about this document interaction
         document_interaction.send(sender=self, document=document, mode="downloaded", request=request)
 
         return DocumentResponse(document)
     
-    def detail(self, request, slug):
+    def detail(self, request, id):
 
-        queryset = self.queryset._clone()
-        document = get_object_or_404(queryset, slug=slug)
-        dms_site = self.name
+        document = self.get_document(id)
+
+        dms_site = self
         thumbnail = self.thumbnail
         list_links = dict([(a, True) for a in self.links])
 
@@ -207,9 +210,9 @@ class DocumentView(object):
 
         return render_to_response(self.template, locals())
     
-    def view(self, request, slug):
-        queryset = self.queryset._clone()
-        document = get_object_or_404(queryset, slug=slug)
+    def view(self, request, id):
+
+        document = self.get_document(id)
 
         # Send a signal to let everyone know about this document interaction
         document_interaction.send(sender=self, document=document, mode="viewed", request=request)
@@ -220,6 +223,11 @@ class DocumentView(object):
     ####################
     # INTERNAL METHODS #
     ####################
+    def _get_prepared_queryset(self):
+        queryset = self.queryset._clone()
+        if self.ordering:
+            queryset = queryset.order_by(*self.ordering)
+        return queryset
 
     def _prepare_field(self, document, field):
         " Prepare the field for the template, much like a template filter would. "
@@ -229,11 +237,11 @@ class DocumentView(object):
         value = getattr(document, field)
 
         # Run standard class filters (eg DateTimeField)
-        if field_class.__class__ in self.field_class_filters:
+        if value is not None and field_class.__class__ in self.field_class_filters:
             value = self.field_class_filters[field_class.__class__](value)
 
         # Run specific field filters
-        if field in self.field_filters:
+        if value is not None and field in self.field_filters:
             value = self.field_filters[field](value)
 
         return (verbose_name, value)
@@ -270,6 +278,13 @@ class DocumentView(object):
 class DocumentAdmin(object):
     model = None
     form = None # Use ModelForm
+    template = 'django_dms/admin.html'
+    fields = None
+    exclude = None
+    # Keys can be: email_subject, email_content, email_sender, email_date, email_received_date, 
+    #              file_mimetype, file_original_name, file_original_name_stem, file_original_name_extension, file
+    email_populate = {}
+    document_view = None
 
     def __init__(self, name=None):
         self.name = name
@@ -278,14 +293,25 @@ class DocumentAdmin(object):
         """ Get the list of url patterns for this view. """
         return patterns('',
             #url(r'^$',                      self.list, name="%s_document_list" % self.name),
+            #url(r'^(.+)/edit/$',  self.edit, name="%s_document_edit" % self.name),
             url(r'^([\w\d-]+)/confirm/$',  self.confirm, name="%s_document_confirm" % self.name)
             )
     urls = property(get_urls)
 
-    def confirm(self, request, uuid):
-        # 1. Find data or 404
-        data = get_object_or_404(DocumentStaging, uuid=uuid)
+    def edit(self, request, pk):
+        instance = get_object_or_404(self.model, pk=pk)
+        Form = self.get_form()
+        if request.method == "POST":
+            form = Form(request.POST, instance=instance)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse('%s_document_detail' % data.dms_site, args=[getattr(instance, data.dms_site.url_identifier_field)]))
+        else:
+            form = Form(instance=instance)
+        return HttpResponse(form)
+        return render_to_response('django_dms/edit.html')
 
+    def get_form(self):
         # 2. Create form
         if self.form:
             Form = self.form
@@ -293,20 +319,60 @@ class DocumentAdmin(object):
             class Form(forms.ModelForm):
                 class Meta:
                     model = self.model
-                    exclude = ['file']
+                    fields = self.fields or None
+                    exclude = (self.exclude or []) + ['file']
+        return Form
 
-        # 3. Populate visible form
-        instance = self.model()
-        instance.file_mimetype = data.file_mimetype
-        instance.title, instance.file_extension = os.path.splitext(data.original_filename)
-        instance.title = instance.title.replace('_', ' ').replace('-', ' ')
+    def confirm(self, request, uuid):
+        # 1. Find data or 404
+        data = get_object_or_404(DocumentStaging, uuid=uuid)
 
-        # Postpone file saving until after POST
-        #instance.file.save(data.original_filename, data.file, save=False)
-        #instance.file = data.file
+        Form = self.get_form()
 
-        print instance.__dict__
+        # 3. Handle POSTed form
+        if request.method == "POST":
+            form = Form(request.POST)
+            if form.is_valid():
+                instance = form.save(commit=False)
+                #instance.file.save(data.file_original_name, data.file, save=False)
+                setattr(instance, self.email_populate.get('file', 'file'), data.file)
+                instance.save()
 
-        form = Form(instance=instance)
+                return HttpResponseRedirect(reverse('%s_document_detail' % data.dms_site, args=[getattr(instance, data.dms_site.url_identifier_field)]))
 
-        return HttpResponse(str(form))
+        # 4. Handle new form
+        else:
+
+            # 4a. Populate visible form
+            # TODO: Allow custom population? (The only fields available are filename, subject, email body etc)
+            instance = self.model()
+            filename_stem, filename_extension = os.path.splitext(data.file_original_name)
+    
+            # Keys can be email_subject, email_content, email_author, email_date, email_received_date, 
+            #             file_mimetype, file_original_name, file_original_name_stem, file_original_name_extension, file
+            email_populate = self.email_populate.copy()
+    
+            # Process virtual fields: file_original_name_stem, file_original_name_extension
+            if 'file_original_name_stem' in email_populate:
+                setattr(instance, email_populate.pop('file_original_name_stem'), filename_stem)
+            if 'file_original_name_extension' in email_populate:
+                setattr(instance, email_populate.pop('file_original_name_extension'), filename_extension)
+            else:
+                instance.file_extension = filename_extension
+
+            # Process certain fields by default
+            setattr(instance, email_populate.pop('file_mimetype', 'file_mimetype'), data.file_mimetype)
+            # The file field is processed at the end, when we have the data.
+            email_populate.pop('file', None)
+    
+            # Process all other fields explicitly
+            for key, value in email_populate.items():
+                setattr(instance, value, getattr(data, key))
+
+            form = Form(instance=instance)
+
+        context = {}
+        context['form'] = form
+        context['request'] = request
+
+        return render_to_response(self.template, context)

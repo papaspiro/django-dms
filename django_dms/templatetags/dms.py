@@ -31,7 +31,10 @@ class DMSReverse(template.Node):
         self.args = [ template.Variable(arg) for arg in args ]
     def render(self, context):
         site = self.dms_site.resolve(context)
-        args = [ arg.resolve(context) for arg in self.args ]
+        try:
+            args = self.args[0].resolve(context).url_pattern_args
+        except AttributeError:
+            args = [ arg.resolve(context) for arg in self.args ]
         if not site:
             raise template.TemplateSyntaxError, "site missing from dms_url"
         return reverse('%s_%s' % (site.name, self.url_name), args=args)
