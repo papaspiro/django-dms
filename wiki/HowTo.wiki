@@ -1,15 +1,38 @@
 #summary How to use django_dms
 
 = Using the framework =
-`django-dms` can be used as a framework, that is, to help developers build apps with document management features. It does this by defining an abstract data model (`DocumentBase`), which can be inherited and extended.
+`django-dms` can be used as a framework, that is, to help developers build apps with document management features. It provides the following features:
+  * abstract model class "`DocumentBase`"
+  * [MetadataExtraction automatic model population using file's metadata]
+  * [GenericViews generic views] (list, detail, upload)
+  * [GenericViews document delivery] (thumbnail preview, in-browser view, download, email)
+  * [EmailUpload upload by email] (and populate other fields using subject/body/sender/date)
+  * custom model fields: UUID, FriendlyDocID
+Two out-of-the-box document management systems are also provided as an example, for non-developers and for internal testing.
+  * Basic DMS for a small database (using slug references)
+  * Basic DMS for a larger database (using FriendlyDocID references)
 
-== Basic use ==
+== Using the `DocumentBase` model ==
 In your `models.py`, simply create a model from either `DocumentBase` or `BasicDocumentBase`.
 {{{
 from django_dms import DocumentBase
 
-class Report(DocumentBase):
-    name = models.CharField(max_length=150)
+class Thesis(DocumentBase):
+    title    = models.CharField(max_length=150)
+    author   = models.CharField(max_length=150)
+    abstract = models.TextField()
+    grade    = models.CharField(max_length=2)
 }}}
 
-`BasicDocumentBase` already defines a few useful fields, such as `title`, `summary`, `author` and `date_created`. This can automatically be populated from the document's metadata, if the metadata system is connected (see below).
+The Thesis class now has a few additional fields:
+  * `uuid`: a universal id, used as the internal filename
+  * `file`: the file in question
+  * `file_mimetype`: the content type or mimetype of the file
+  * `file_extension`: the original extension, used for delivery filename
+  * `date_updated`: date this document was updated
+  * `date_added`: date this document was added to the system
+It also has the following methods/attributes/properties defined, which can be overridden:
+  * `file_friendly_filename`: used for the delivery filename
+  * `file_thumbnail_small`: a link to a small thumbnail (about 200px)
+  * `file_thumbnail_medium`: a link to a medium thumbnail (about 600px)
+  * `file_already(mode, request)`: whether or not the user has already viewed/downloaded/sent this document
