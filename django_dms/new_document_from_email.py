@@ -45,12 +45,10 @@ def receive_document(data, site=None):
     # TODO: https too? Might be tricky without a request object, would need a settings variable
     host = 'http://%s' % Site.objects.get_current().domain
     message = EmailMessage()
-    message.to = email.get('Reply-To', email['From'])
+    message.to = [email.get('Reply-To', email['From'])]
     message.subject = "Attachments received" # TODO allow customisation of this 
     message.body = render_to_string('django_dms/staged_document.txt', {'host': host,'dms_site': site, 'email': email, 'documents': documents})
     message.send()
-
-    #print message.body
 
 class EmailData(object):
     pass
