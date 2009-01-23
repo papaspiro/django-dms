@@ -48,9 +48,9 @@ def receive_document(data, site=None):
     message.to = email.get('Reply-To', email['From'])
     message.subject = "Attachments received" # TODO allow customisation of this 
     message.body = render_to_string('django_dms/staged_document.txt', {'host': host,'dms_site': site, 'email': email, 'documents': documents})
-    #message.send()
+    message.send()
 
-    print message.body
+    #print message.body
 
 class EmailData(object):
     pass
@@ -91,7 +91,8 @@ def get_mod_obj(path):
 
 
 if __name__ == '__main__':
-    email = open('/Users/will/Desktop/test.eml', 'r')
-    receive_document(email, site='documents.views.legal_essay_admin')
-
-
+    # email = open('/Users/will/Desktop/test.eml', 'r')
+    #receive_document(email, site='documents.views.legal_essay_admin')
+    import sys
+    site = sys.argv[1]
+    receive_document(sys.stdin, site=site)
