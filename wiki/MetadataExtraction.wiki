@@ -1,4 +1,6 @@
-== Automatically populating from a document's metadata ==
+#summary Populate the model's attributes using a document's metadata
+
+== Basic use ==
 Metadata contained within a file can be used to automatically populate attributes in your model. This makes use of the [http://www.gnu.org/software/libextractor/ libextractor] library, which needs to be installed with python bindings.
 
 If you connect the `extract_metadata` function, data can be automatically
