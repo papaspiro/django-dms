@@ -1,0 +1,3 @@
+#summary Explanation of design decisions made
+
+This page will eventually outline some of the design decisions made and why, to help you decide whether or not you want to do the same...
