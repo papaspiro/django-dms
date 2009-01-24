@@ -21,6 +21,7 @@ from django_dms.widgets import DocumentWidget, ManyDocumentsWidget
 class DocumentField(models.ForeignKey, models.FileField):
     """ Links to a document, with all the features of a FileField().
     """
+    # TODO: get rid of this field --- too hard-basket, difficult to maintain
     def __init__(self, *args, **kwargs):
         super(DocumentField, self).__init__(*args, **kwargs)
 
@@ -50,6 +51,7 @@ class ManyDocumentsField(models.ManyToManyField):
     """ Links to a document, with all the features of a FileField().
         This is simply a prefabricated ManyToManyField.
     """
+    # TODO: get rid of this field --- too hard-basket, difficult to maintain
     def __init__(self, to, *args, **kwargs):
         super(ManyDocumentsField, self).__init__(to, *args, **kwargs)
         selfchoices = ChoicesBank(to._default_manager.all())
@@ -80,6 +82,7 @@ class _FlexibleTypedChoiceField(forms.MultipleChoiceField):
         Our "Flexible" version does not coerce choices, allowing its value 
         to be determined lazily.
     """
+    # TODO: remove this class if ManyDocumentsField is removed
 
     def _get_choices(self):
         return self._choices
