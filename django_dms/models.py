@@ -45,7 +45,7 @@ class DocumentBase(models.Model):
     file_extension = models.CharField(max_length=10, default="", editable=False)
 
     date_added   = models.DateTimeField("added", auto_now_add=True)
-    date_updated = models.DateTimeField("updated", auto_now=True)
+    date_updated = models.DateTimeField("updated", auto_now=True) # TODO: Only change this if the file field has changed
 
     class Meta:
         abstract = True
@@ -93,55 +93,9 @@ class DocumentBase(models.Model):
         # TODO: subclass DjangoThumbnail to remove UUID from URL
         return DjangoThumbnail(self.file.name, (600,600))
 
-
-class BasicDocumentBase(DocumentBase):
-    """ Basic document entry, with a selected metadata.
-    """
-    title        = models.CharField(max_length=150, default="", blank=True)
-    slug         = models.SlugField() # Make this unique for smaller databases
-    summary      = models.TextField(default="", blank=True)
-    author       = models.CharField(max_length=150, default="", blank=True)
-    date_created = models.DateTimeField("created", null=True, blank=True)
-
-    # NB: Automate this in the form
-    uploaded_by  = models.ForeignKey(User, null=True, blank=True, editable=False)
-
-    # Extract plaintext from document and store in database to allow full-text searching
-    plaintext    = models.TextField(default="", blank=True, editable=False)
-
-    def __unicode__(self):
-        return self.title or 'untitled (%s...%s)' % (self.uuid[:3], self.uuid[-3:])
-
-    class Meta:
-        abstract = True
-
-    @property
-    def friendly_filename(self):
-        """ A friendly filename (ie not the UUID) for the user to see when they download.
-            Overload this with a slug field. 
-        """
-        return '%s.%s' % ('_'.join(self.slug.split()), self.file_extension)
-
-    # METADATA handling fields
-
-    AUTO_METADATA = dict(title='title', file_mimetype='mimetype', author='creator', date_created='creation date')
-    def process_metadata_title(self, value):
-        return value.isupper() and value.title() or value
-    def process_metadata_date_created(self, value):
-        # TODO: This should be in the metadata engine
-        for pattern in ('%Y-%m-%dT%H:%M:%SZ', '%Y%m%d%H%M%S'):
-            try:
-                # String is trimmed to the size of pattern, assuming that
-                # it is the same length as the string it is matching (coincidently, it often is!).
-                return datetime.strptime(value[:len(pattern)], pattern)
-            except ValueError:
-                continue
-        return value
-
-
 class InteractionManager(models.Manager):
     use_for_related_fields = True
-    def register(self, document, mode, request):
+    def register(self, document, mode, request, recipient=None, **kwargs):
         attributes = { 'document': document, 'mode': getattr(self.model.MODES, mode.upper()) }
         if request.user.is_anonymous():
             attributes['session_key'] = request.session.session_key

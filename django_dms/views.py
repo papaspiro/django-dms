@@ -72,7 +72,7 @@ def _email_document(document, to, template='django_dms/email.txt', subject=''):
     # Send the message
     message.send()
 
-class Item():
+class Item(objects):
     pass
 
 class EmailForm(forms.Form):
