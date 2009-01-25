@@ -1,43 +1,14 @@
-{% extends "base-site.html" %}
-{% load thumbnail %}
 {% load already %}
+{% load dms %}
 
-{% block extra_javascript %}
-<script type="text/javascript" src="/media/js/jquery.js"></script>
-<script type="text/javascript" src="/media/js/jquery.lightbox-0.5.js"></script>
-<script type="text/javascript" src="/media/js/jquery.form.js"></script>
-{% endblock %}
+<h2><a href="{% dms_url dms_site document_detail document %}">{{ document.title|default:"Untitled" }}</a></h2>
+<p>{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{{ document.file_thumbnail_medium }}">Preview</a>, {% endif %}
+   {% if list_links.view %}<a href="{% dms_url dms_site document_view document %}">View</a>, {% endif %}
+   {% if list_links.download %}<a href="{% dms_url dms_site document_download document %}">Download</a>, {% endif %}
+   {% if list_links.email %}{% if document|already_sent:request %}<span class="subtle">Email sent{% else %}<span id="send"><a class="send" href="{% dms_url dms_site document_send document %}">Email it to me</a>{% endif %}</span>{% endif %}</p>
+{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{{ document.file_thumbnail_medium }}">{% endif %}{% if thumbnail %}<img src="{{ document.file_thumbnail_small}}" alt="Thumbnail of {{ document.title }}" />{% endif %}{% if list_links.preview %}</a>{% endif %}
 
-{% block extra_stylesheets %}
-<link rel="stylesheet" type="text/css" href="/media/css/jquery.lightbox-0.5.css" media="screen" />
-{% endblock %}
-
-{% block final_javascript %}
-<script type="text/javascript">
-$(function() {
-    $('a.preview').lightBox();
-    $(".send").attr('href', '#');
-    });
-</script>
-{% endblock %}
-
-{% block content %}
-<div id="message"></div>
-<h2><a href="{% url dms_site:document_detail document.slug %}">{{ document.title|default:"Untitled" }}</a></h2>
-<p>{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{% thumbnail document.file 600x600 %}">Preview</a>, {% endif %}
-   {% if list_links.view %}<a href="{% url dms_site:document_view document.slug %}">View</a>, {% endif %}
-   {% if list_links.download %}<a href="{% url dms_site:document_download document.slug %}">Download</a>, {% endif %}
-   {% if list_links.email %}{% if document|already_sent:request %}<span class="subtle">Email sent{% else %}<span id="send_{{ forloop.counter }}"><a class="send" href="{% url dms_site:document_send document.slug %}">Email it to me</a>{% endif %}</span>{% endif %}</p>
-{% if list_links.preview %}<a class="preview" title="{{ document.title }}" href="{% thumbnail document.file 600x600 %}">{% endif %}{% if list_thumbnail %}<img src="{% thumbnail document.file 200x200 %}" alt="Thumbnail of {{ document.title }}" />{% endif %}{% if list_links.preview %}</a>
-<script type="text/javascript">
-    $("#send_{{ forloop.counter }} a").click(function(){
-        $('#send_{{ forloop.counter }}').load('{% url dms_site:document_send_ajax document.slug %}').addClass('subtle');
-        return false
-        });
-</script>{% endif %}
-{% for name,field in display_fields %}{% if field %}
-<h3>{{ name|title }}</h3>
+{% for name,field in fields %}{% if field %}
+<h3>{{ name|capfirst }}</h3>
 <p>{{ field }}</p>{% endif %}
 {% endfor %}
-{# {% if list_display.summary %}{% if document.summary %}<p>{{ document.summary }}</p>{% endif %}{% endif %} #}
-{% endblock %}

@@ -17,10 +17,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import pre_save
 from django.utils.encoding import force_unicode, smart_unicode
-from sorl.thumbnail.main import DjangoThumbnail
 
 from django_dms.utils import ChoicesBank, Choices, UUIDField, HashField, get_hash
 from mimetypes import guess_type
+
+try:
+    from sorl.thumbnail.main import DjangoThumbnail
+except ImportError:
+    DjangoThumbnail = None
 
 def get_filename_from_uuid(instance, filename, directory='documents'):
     populate_file_extension_and_mimetype(instance, filename)
@@ -37,7 +41,7 @@ class DocumentBase(models.Model):
     """ Minimum fields for a document entry.
         Inherit this model to customise document metadata, see BasicDocument for an example.
     """
-    uuid           = models.CharField(max_length=36, default=lambda:unicode(uuid.uuid4()), blank=True, editable=False, primary_key=True)
+    uuid           = models.CharField(max_length=36, default=lambda:unicode(uuid.uuid4()), blank=True, editable=False)#, primary_key=True)
     # TODO: The django admin uses the file extension to determine the filetype for the preview
     # A new widget will have to be created, in a similar fashion to the automatic one
     file           = models.FileField(upload_to=get_filename_from_uuid)#lambda i,f: 'documents/%s' % i.uuid)
@@ -86,12 +90,14 @@ class DocumentBase(models.Model):
     @property               
     def file_thumbnail_small(self):
         # TODO: subclass DjangoThumbnail to remove UUID from URL
-        return DjangoThumbnail(self.file.name, (200,200))
+        if DjangoThumbnail:
+            return DjangoThumbnail(self.file.name, (200,200))
 
     @property               
     def file_thumbnail_medium(self):
         # TODO: subclass DjangoThumbnail to remove UUID from URL
-        return DjangoThumbnail(self.file.name, (600,600))
+        if DjangoThumbnail:
+            return DjangoThumbnail(self.file.name, (600,600))
 
 class InteractionManager(models.Manager):
     use_for_related_fields = True
