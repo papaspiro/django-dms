@@ -34,6 +34,12 @@ from django.contrib.humanize.templatetags.humanize import naturalday
 from django_dms.signals import document_interaction
 from django_dms.models import DocumentStaging
 
+# Check if thumbnails are supported
+try:
+    import sorl.thumbnail as SORL_THUMBNAIL
+except ImportError:
+    SORL_THUMBNAIL = None
+
 # Store requested passwords to allow a batch of documents to be downloaded without prompt
 # TODO: Should this timeout, to avoid problems with public computers?
 SESSION_VAR_EMAIL_ADDRESS = 'django_dms_email_address'
@@ -72,7 +78,7 @@ def _email_document(document, to, template='django_dms/email.txt', subject=''):
     # Send the message
     message.send()
 
-class Item(objects):
+class Item(object):
     pass
 
 class EmailForm(forms.Form):
@@ -129,7 +135,7 @@ class DocumentView(object):
         object_list = [ self._get_list_item(i) for i in page.object_list ]
         context = { 'request': request, 'object_list': object_list,
                     'list_display': dict([(a, True) for a in self.list_display]),
-                    'list_thumbnail': self.list_thumbnail,
+                    'list_thumbnail': SORL_THUMBNAIL and self.list_thumbnail,
                     'list_links': dict([(a, True) for a in self.list_links]),
                     'page': page,
                     'dms_site': self,
@@ -198,7 +204,7 @@ class DocumentView(object):
         document = self.get_document(id)
 
         dms_site = self
-        thumbnail = self.thumbnail
+        thumbnail = SORL_THUMBNAIL and self.thumbnail
         list_links = dict([(a, True) for a in self.links])
 
         # Get the list of fields to include (default to all fields)

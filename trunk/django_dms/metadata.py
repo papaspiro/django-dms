@@ -65,7 +65,7 @@ def register(model, *fields, **kwfields):
 
     field_mapping = kwfields.update(zip(fields, fields))
 
-    def extract_metadata_socket(sender, instance):
+    def extract_metadata_socket(sender, instance, **kwargs):
         extract_metadata(sender, instance, field_mapping)
 
     # TODO: Allow extraction fields to be determined

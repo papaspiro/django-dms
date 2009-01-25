@@ -16,5 +16,5 @@ from django.conf.urls.defaults import *
 from django_dms.apps.small_dms.views import document_view
 
 urlpatterns = patterns('',
-    url(r'^',  include(document_view),  name="document_view"),
+    url(r'^',  include(document_view.urls),  name="document_view"),
 )

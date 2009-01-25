@@ -4,14 +4,16 @@ from django.db import models
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 class DocumentView(DocumentView):
-    list_display = ['author', 'summary']
+    list_display = ['document_id', 'author', 'summary']
     list_thumbnail = False
     thumbnail = True
     queryset = Document.objects.all()
-    fields = ['author', 'summary', 'date_created', 'uploaded_by']
+    fields = ['document_id', 'author', 'summary', 'date_created', 'uploaded_by']
     ordering = ['title']
-    url_identifier_field = 'slug'
+    url_identifier_field = 'document_id'
     field_class_filters = { models.DateTimeField: lambda v: naturalday(v, 'F Y').title() }
+    template = 'large_dms/detail.html'
+    list_template = 'large_dms/list.html'
 
 document_view = DocumentView(name="document_view")
 

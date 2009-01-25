@@ -1,12 +1,14 @@
 from django.db import models
 from django_dms.models import DocumentBase, DocumentInteractionBase
+from django.contrib.auth.models import User
+from django_dms import friendly_id
 
 class Document(DocumentBase):
     """ Basic document entry for larger document databases.
         Each document has a document_id which is a short string of characters using friendly_id.
         See django_dms/friendly_id.py for important information.
     """
-    document_id  = models.CharField(max_length=10, null=True, blank=True, editable=False, unique=True)
+    document_id  = models.CharField("document ID", max_length=10, null=True, blank=True, editable=False, unique=True)
     title        = models.CharField(max_length=150, default="", blank=True)
     summary      = models.TextField(default="", blank=True)
     author       = models.CharField(max_length=150, default="", blank=True)
