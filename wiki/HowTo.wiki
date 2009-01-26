@@ -1,7 +1,7 @@
 #summary How to use django_dms
 Django-dms provides a document management system and a framework to integrate customised document storage with django projects.
 
-This document provides the following:
+This how-to will go through the following:
   * Seeing what django-dms can do (using the test projects)
   * Using the sample DMS apps
   * Using the DMS framework
