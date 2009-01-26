@@ -45,12 +45,24 @@ class DocumentInteraction(DocumentInteractionBase):
     """ Track user interactions with these documents. """
     document    = models.ForeignKey(Document, related_name="interactions")
 
+class TagManager(models.Manager):
+    use_for_related_fields = True
+
+    def __unicode__(self):
+        return ", ".join(t.name for t in self.all().order_by('name'))
 
 class Tag(models.Model):
     """ Allow documents to be categorised. """
     name = models.CharField(max_length=40)
     # Eventualy use generic relation
-    document = models.ForeignKey(Document)
+    documents = models.ManyToManyField(Document, related_name="tags")
+    objects = TagManager()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
 
 
 # Some automatic metadata handing, if the extractor library is available
