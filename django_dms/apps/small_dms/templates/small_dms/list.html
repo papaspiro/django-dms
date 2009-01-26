@@ -2,19 +2,11 @@
 {% load already %}
 {% load dms %}
 
-{% block extra_javascript %}
-<script type="text/javascript" src="/media/js/jquery.js"></script>
-<script type="text/javascript" src="/media/js/jquery.lightbox-0.5.js"></script>
-<script type="text/javascript" src="/media/js/jquery.form.js"></script>
-{% endblock %}
 
-{% block extra_stylesheets %}
-<link rel="stylesheet" type="text/css" href="/media/css/jquery.lightbox-0.5.css" media="screen" />
-{% endblock %}
-
-{% block final_javascript %}
+{% block extra_head %}
+{{ block.super }}
 <script type="text/javascript">
-$(function() {
+$(document).ready(function() {
     $('a.preview').lightBox();
     $(".send").attr('href', '#');
     });

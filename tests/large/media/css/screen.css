@@ -2,7 +2,7 @@
 body { background: #aaa; width: 40em; margin: 20px auto;
     font: 0.8625em 'Lucida Grande', 'Verdana', 'Geneva', 'Lucida', 'Arial', 'Helvetica', sans-serif; 
     }
-img { border: 1px solid #777; float: right; margin: 15px; }
+a.preview img { border: 1px solid #777; float: right; margin: 15px; }
 h2 { margin-bottom: 10px; margin-top: 30px;}
 h3 { font-family: georgia, serif; font-style: italic; font-size: 100%; color: #555; font-weight: normal; margin-top: 15px; margin-bottom: 5px; }
 
