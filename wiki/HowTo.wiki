@@ -17,8 +17,8 @@ It would be best if you had django and sorl.thumbnail installed in your pythonpa
 
 = Using the sample DMS apps =
 The sample apps can be found here:
-  * `django_dms.apps.small`: for fewer documents, friendly
-  * `django_dms.apps.large`: for many documents, scalable
+  * `django_dms.apps.small_dms`: for fewer documents, friendly
+  * `django_dms.apps.large_dms`: for many documents, scalable
 To use them, add the relevant app to INSTALLED_APPS and add an entry to the project's `urls.py` such as
 {{{
 urlpatterns = patterns('',
