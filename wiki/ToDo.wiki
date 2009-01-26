@@ -8,7 +8,7 @@ In progress:
 Coming up next:
   * Document rating system
   * Customisable authorisation, access control
-  * Remove UUIDs from user interface (thumbnails)
+  * Remove UUIDs from user interface (thumbnails, inherit `DjangoThumbnail`?)
   * Access logs
 
 Long term features:
