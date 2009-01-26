@@ -58,7 +58,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django_dms',
     'django_dms.apps.large_dms',
-    'django_extensions',
+    #'django_extensions',
 )
 
 
