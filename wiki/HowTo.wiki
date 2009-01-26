@@ -1,9 +1,10 @@
 #summary How to use django_dms
+Django-dms provides a document management system and a framework to integrate customised document storage with django projects.
 
 = Using the framework =
 `django-dms` can be used as a framework, that is, to help developers build apps with document management features. It provides the following features:
   * abstract model class "`DocumentBase`"
-  * [MetadataExtraction automatic model population using file's metadata]
+  * [MetadataExtraction automatic data population using file's metadata]
   * [GenericViews generic views] (list, detail, upload)
   * [GenericViews document delivery] (thumbnail preview, in-browser view, download, email)
   * [EmailUpload upload by email] (and populate other fields using subject/body/sender/date)
@@ -36,3 +37,21 @@ It also has the following methods/attributes/properties defined, which can be ov
   * `file_thumbnail_small`: a link to a small thumbnail (about 200px)
   * `file_thumbnail_medium`: a link to a medium thumbnail (about 600px)
   * `file_already(mode, request)`: whether or not the user has already viewed/downloaded/sent this document
+
+= Using the sample DMS apps =
+The sample apps can be found here:
+  * `django_dms.apps.small`: for fewer documents, friendly
+  * `django_dms.apps.large`: for many documents, scalable
+To use them, add the relevant app to INSTALLED_APPS and add an entry to the project's `urls.py` such as
+{{{
+urlpatterns = patterns('',
+    (r'^documents', include('django_dms.apps.small_dms.urls')),
+)
+}}}
+The apps are designed to use the same templates for the rest of your site, provided you have followed some standard django conventions:
+  * Base template is called `base.py`
+  * Provides the following blocks: `content`, `body_class`, `extra_javascript` and `extra_stylesheets`
+  * These can be overriden by overriding the `small_dms`/`large_dms` templates.
+If you want to take advantage of some of the javascript in the apps, you will need to provide jquery and jquery.lightbox. See the templates for more details.
+
+The two sample apps are used in the two test projects provided (`trunk/tests` in the repository), they should start up out-of-the-box with a simple `./manage.py syncdb --noinput` and `./manage.py runserver`. Have a look at those if you are having trouble using any of the apps.
