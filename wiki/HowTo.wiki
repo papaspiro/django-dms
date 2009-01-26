@@ -3,7 +3,7 @@ Django-dms provides a document management system and a framework to integrate cu
 
 This document provides the following:
   * Seeing what django-dms can do (using the test projects)
-  * Using the sample dms-apps
+  * Using the sample DMS apps
   * Using the DMS framework
 
 = Seeing what django-dms can do =
