@@ -5,7 +5,7 @@ from django.contrib.humanize.templatetags.humanize import naturalday
 
 class DocumentView(DocumentView):
     list_display = ['summary']
-    list_thumbnail = False
+    list_thumbnail = True
     thumbnail = True
     queryset = Document.objects.all()
     fields = ['summary', 'date_created']

@@ -30,6 +30,8 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.conf.urls.defaults import patterns, url, include
 from django.contrib.humanize.templatetags.humanize import naturalday
+from django.db.models.fields import FieldDoesNotExist
+from django.utils.encoding import force_unicode
 
 from django_dms.signals import document_interaction
 from django_dms.models import DocumentStaging
@@ -146,7 +148,6 @@ class DocumentView(object):
     def get_document(self, id):
         queryset = self._get_prepared_queryset()
         kwargs = {self.url_identifier_field: id}
-        print kwargs
         return get_object_or_404(queryset, **kwargs)
 
     def send(self, request, id):
@@ -235,15 +236,21 @@ class DocumentView(object):
             queryset = queryset.order_by(*self.ordering)
         return queryset
 
+
     def _prepare_field(self, document, field):
         " Prepare the field for the template, much like a template filter would. "
 
-        field_class = document._meta.get_field(field)
-        verbose_name = field_class.verbose_name
-        value = getattr(document, field)
+        try:
+            field_class = document._meta.get_field(field)
+            verbose_name = field_class.verbose_name
+        except FieldDoesNotExist:
+            field_class = None
+            verbose_name = ' '.join(field.split('_'))
+
+        value = force_unicode(getattr(document, field))
 
         # Run standard class filters (eg DateTimeField)
-        if value is not None and field_class.__class__ in self.field_class_filters:
+        if field_class and value is not None and field_class.__class__ in self.field_class_filters:
             value = self.field_class_filters[field_class.__class__](value)
 
         # Run specific field filters
@@ -271,7 +278,7 @@ class DocumentView(object):
         list_item = Item()
         list_item.document = document
         # TODO: call callables?
-        list_item.display_fields = [self._prepare_field(document, field) for field in self.list_display ]
+        list_item.display_fields = [self._prepare_field(document, field) for field in self.list_display]
         return list_item
 
     # Process documents before use
