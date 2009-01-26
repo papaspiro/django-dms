@@ -27,9 +27,9 @@ urlpatterns = patterns('',
 }}}
 The apps are designed to use the same templates for the rest of your site, provided you have followed some standard django conventions:
   * Base template is called `base.py`
-  * Provides the following blocks: `content`, `body_class`, `extra_javascript` and `extra_stylesheets`
-  * These can be overriden by overriding the `small_dms`/`large_dms` templates.
-If you want to take advantage of some of the javascript in the apps, you will need to provide jquery and jquery.lightbox. See the templates for more details.
+  * Base template provides the following blocks: `content`, `body_class` and `extra_head`
+  * NB These can be overriden by overriding the templates under `small_dms`/`large_dms` templates.
+If you want to take advantage of some of the javascript in the apps, you will need to provide jquery and jquery.lightbox. See the test projects and templates for more details.
 
 The two sample apps are used in the two test projects provided (`trunk/tests` in the repository), they should start up out-of-the-box with a simple `./manage.py syncdb --noinput` and `./manage.py runserver`. Have a look at those if you are having trouble using any of the apps.
 = Using the DMS framework =
