@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-""" Generates and decodes an unique invoice "number", which can use characters
+""" Generates and decodes an unique ID, which can use characters
     to shorten its length.
 
      Author: Will Hardy
@@ -33,24 +33,24 @@ except ImportError:
 # Keep this small for shorter strings, but big enough to avoid changing
 # it later. If you do change it later, it might be a good idea to specify a
 # STRING_LENGTH change, making all future strings longer, and therefore unique.
-SIZE = getattr(settings, 'DOCUMENT_ID_SIZE', 10000000)
+SIZE = getattr(settings, 'FRIENDLY_ID_SIZE', 10000000)
 
 # OPTIONAL PARAMETERS
 # This just means we don't start with the first number, to mix things up
-OFFSET = getattr(settings, 'DOCUMENT_ID_OFFSET', SIZE / 2 - 1)
+OFFSET = getattr(settings, 'FRIENDLY_ID_OFFSET', SIZE / 2 - 1)
 # Alpha numeric characters, only uppercase, no confusing values (eg 1/I,0/O,Z/2)
 # Remove some letters if you prefer more numbers in your strings
 # You may wish to remove letters that sound similar, to avoid confusion when a
 # customer calls on the phone (B/P, M/N, 3/C/D/E/G/T/V)
-VALID_CHARS = getattr(settings, 'DOCUMENT_ID_VALID_CHARS', 
+VALID_CHARS = getattr(settings, 'FRIENDLY_ID_VALID_CHARS', 
                                         "3456789ACDEFGHJKLQRSTUVWXY")
 # Don't set this if you don't know what you're doing, you run the risk
 # It can be used to mix up the strings differently to how others using this code
 # would, but be careful to pick a factor of SIZE.
-PERIOD = getattr(settings, 'DOCUMENT_ID_PERIOD', None)
+PERIOD = getattr(settings, 'FRIENDLY_ID_PERIOD', None)
 # Don't set this, it isn't necessary and you'll get ugly strings like 'AAAAAB3D'
 # It will be otherwise done automatically to match SIZE
-STRING_LENGTH = getattr(settings, 'DOCUMENT_ID_STRING_LENGTH', None)
+STRING_LENGTH = getattr(settings, 'FRIENDLY_ID_STRING_LENGTH', None)
 
 
 def find_suitable_period():

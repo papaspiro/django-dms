@@ -48,6 +48,9 @@ class DocumentInteraction(DocumentInteractionBase):
 class TagManager(models.Manager):
     use_for_related_fields = True
 
+    def __call__(self):
+        return self.__unicode__()
+
     def __unicode__(self):
         return ", ".join(t.name for t in self.all().order_by('name'))
 
