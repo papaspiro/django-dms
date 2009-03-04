@@ -13,7 +13,7 @@ cd trunk/tests/small_dms/
 python ./manage.py syncdb --noinput
 python ./manage.py runserver
 }}}
-It would be best if you had django and sorl.thumbnail installed in your pythonpath :-)
+An admin user is created with username/password set to admin/admin. It would be best if you had django and sorl.thumbnail installed in your pythonpath :-)
 
 = Using the sample DMS apps =
 The sample apps can be found here:
