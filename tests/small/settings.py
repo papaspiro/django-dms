@@ -1,5 +1,6 @@
 import os
-project_dir = lambda p: os.path.join(os.path.dirname(__file__), p)
+PROJECT_DIR = os.path.dirname(__file__)
+project_dir = lambda p: os.path.join(PROJECT_DIR, p)
 
 # Django settings for small project.
 
@@ -58,7 +59,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django_dms',
     'django_dms.apps.small_dms',
-    #'django_extensions',
+    #'django_extensions', # install and enable to use the scripts
 )
 
 
