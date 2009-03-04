@@ -7,8 +7,8 @@ This how-to will go through the following:
   * Using the DMS framework
 
 = Requirements =
-* Django 1.1 (currently unreleased, use the SVN version).
-* sorl.thumbnail (optional, if you want thumbnails and previews)
+  * Django 1.1 (currently unreleased, use the SVN version).
+  * sorl.thumbnail (optional, if you want thumbnails and previews)
 
 I haven't decided whether or not to support django 1.0. There are some nice features coming up in Django 1.1 which I would like to make use of, otherwise it'll be a little bit of work, and there is often no need to use django 1.0 for brand new projects. If you really want this, let me know and I'll put something together :-)
 
