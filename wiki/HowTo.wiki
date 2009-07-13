@@ -7,6 +7,7 @@ This how-to will go through the following:
   * Using the DMS framework
 
 = Requirements =
+  * Python 2.5+ (for now)
   * Django 1.1 (currently unreleased, use the SVN version).
   * sorl.thumbnail (optional, if you want thumbnails and previews)
 
