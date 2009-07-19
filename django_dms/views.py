@@ -22,6 +22,8 @@ from django import forms
 from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.mail import EmailMessage
+from django.conf import settings
+from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.core.paginator import Paginator
@@ -73,6 +75,10 @@ def _email_document(document, to, template='django_dms/email.txt', subject=''):
     # Create the message
     message = EmailMessage(to=to, subject=subject)
     message.to = to
+    try:
+        message.from_email = '%s <%s>' % (Site.objects.get_current().name, settings.DEFAULT_FROM_EMAIL)
+    except: # TODO Find exact exception for this
+        message.from_email = settings.DEFAULT_FROM_EMAIL
     message.subject = subject
     message.body = render_to_string(template, {'document': document})
     message.attach(document.friendly_filename, document.file.read(), document.file_mimetype)
@@ -160,8 +166,8 @@ class DocumentView(object):
             return render_to_response('django_dms/send.html', locals())
     
         # NB: Temporarily disabling actual email sending for development
-        #email_document(document, to=[email], subject='Document: %s' % document.title)
-        print "Sending email to %s" % email 
+        email_document(document, to=[email], subject='Document: %s' % document.title)
+        #print "Sending email to %s" % email 
     
         # Send a signal to let everyone know about this document interaction
         document_interaction.send(sender=self, document=document, mode="sent", request=request, recipient=email)
@@ -183,8 +189,8 @@ class DocumentView(object):
             content += '%s<input type="submit" value="Send"/></form>' % form['email']
             return HttpResponse(content)
     
-        print "Sending email to %s" % email
-        #email_document(document, to=[email], subject='Document: %s' % document.title)
+        #print "Sending email to %s" % email
+        email_document(document, to=[email], subject='Document: %s' % document.title)
 
         # Send a signal to let everyone know about this document interaction
         document_interaction.send(sender=self, document=document, mode="sent", request=request, recipient=email)
@@ -307,7 +313,7 @@ class DocumentAdmin(object):
         return patterns('',
             #url(r'^$',                      self.list, name="%s_document_list" % self.name),
             #url(r'^(.+)/edit/$',  self.edit, name="%s_document_edit" % self.name),
-            url(r'^([\w\d-]+)/confirm/$',  self.confirm, name="%s_document_confirm" % self.name)
+            url(r'^([^\/]+)/confirm/$',  self.confirm, name="%s_document_confirm" % self.name)
             )
     urls = property(get_urls)
 
